@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Textarea } from "../components/ui/textarea"
+import { API_CONFIG } from '../config/api'
 
 export default function ContactForm() {
     const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function ContactForm() {
     })
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+    const [errorMessage, setErrorMessage] = useState('')
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
@@ -23,15 +25,27 @@ export default function ContactForm() {
         e.preventDefault()
         setIsSubmitting(true)
         setSubmitStatus('idle')
+        setErrorMessage('')
 
-        // Simulate API call
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            console.log('Form submitted:', formData)
+            const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.contact}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null)
+                throw new Error(errorData?.message || 'Failed to send message')
+            }
+
             setSubmitStatus('success')
             setFormData({ name: '', email: '', message: '' })
         } catch (error) {
             setSubmitStatus('error')
+            setErrorMessage(error instanceof Error ? error.message : 'An error occurred while sending the message')
         } finally {
             setIsSubmitting(false)
         }
@@ -87,9 +101,10 @@ export default function ContactForm() {
                 <p className="text-green-600 text-center">Message sent successfully!</p>
             )}
             {submitStatus === 'error' && (
-                <p className="text-red-600 text-center">An error occurred. Please try again.</p>
+                <p className="text-red-600 text-center">
+                    {errorMessage || 'An error occurred. Please try again.'}
+                </p>
             )}
         </form>
     )
 }
-

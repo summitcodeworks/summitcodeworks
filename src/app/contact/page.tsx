@@ -3,7 +3,7 @@ import Header from '../components/Header'
 import ContactForm from '../components/ContactForm'
 import {Smartphone, Mail, MapPin} from 'lucide-react'
 
-export default function ContactPage() {
+export default function Page() {
     return (
         <div className="min-h-screen relative">
             <Image
